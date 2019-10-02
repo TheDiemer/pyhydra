@@ -1,0 +1,8 @@
+README.md
+setup.py
+hydra/__init__.py
+hydra/hydra.py
+pyhydra.egg-info/PKG-INFO
+pyhydra.egg-info/SOURCES.txt
+pyhydra.egg-info/dependency_links.txt
+pyhydra.egg-info/top_level.txt

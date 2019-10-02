@@ -1,3 +1,4 @@
 *.pyc
 Pipfile.lock
 tests/test_config.cfg
+build/

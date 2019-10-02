@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: pyhydra
+Version: 0.0.1
+Summary: Python API for interacting with Hydra
+Home-page: https://gitlab.cee.redhat.com/erich/pyhydra
+Author: Eric Rich
+Author-email: erich@redhat.com
+License: UNKNOWN
+Description: # pyhydra
+        
+        Python API for Hydra (CEE Case API) 
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: GNU Affero General Public License v3Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
