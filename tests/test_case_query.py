@@ -21,7 +21,6 @@ class TestCasesQuery(unittest.TestCase):
 
     @unittest.skipUnless(DEBUG, "skipping manuall debugging test")
     def test_case_query(self):
-        # status=Waiting%20on%20Red%20Hat%2CWaiting%20on%20Customer&fields=caseNumber,status,subject,createdDate,bugzillaNumber
         r = self.hydra.query_cases(status=["Waiting on Red Hat" ,"Waiting on Customer"],
                 fields=['caseNumber','status','subject','createdDate','bugzillaNumber'],
                 accounts=['551325'])
