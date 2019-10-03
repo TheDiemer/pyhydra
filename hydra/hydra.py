@@ -25,11 +25,12 @@ class hydra_api:
         self.thread_pool.shutdown(wait=True)
 
 
-    def __call_api(self, endpoint):
+    def __call_api(self, endpoint, parameters=None):
         authentication=(self.username, self.password)
 
-        r = requests.get("{}/{}".format(self.base_api_uri, endpoint), 
-                auth=authentication, verify=self.ca_certificate_path)
+        r = requests.get("{}/{}".format(self.base_api_uri, endpoint),
+                params=parameters, auth=authentication, 
+                verify=self.ca_certificate_path)
         if r.status_code == 204:
             return []
         if r.status_code != 200:
@@ -150,3 +151,23 @@ class hydra_api:
         # This is a non documented api
         return self.__call_api('cases/{}/attachments'.format(case_number))
 
+
+    def query_cases(self, status=[], fields=[], accounts=[], cases=[], 
+           sbrGroups=[], needsNewOwner=None, severity=[], serviceLevel=[], 
+           fts=None, ownerSsousername=[]):
+       query_params = {}
+       
+       if status: query_params.update({'status': ", ".join(status)})
+       if fields: query_params.update({'fields': ", ".join(fields)})
+       if accounts: query_params.update({'accounts': ", ".join(accounts)})
+       if cases: query_params.update({'cases': ", ".join(cases)})
+       if sbrGroups: query_params.update({'sbrGroups': ", ".join(sbrGroups)})
+       if needsNewOwner: query_params.update({'needsNewOwner': needsNewOwner})
+       if severity: query_params.update({'severity': ", ".join(severity)})
+       if serviceLevel:
+           query_params.update({'serviceLevel': ", ".join(serviceLevel)})
+       if fts: query_params.update({'fts': fts})
+       if ownerSsousername: 
+           query_params.update({'ownerSsousername': ", ".join(ownerSsousername)})
+
+       return self.__call_api('cases/', parameters=query_params)
