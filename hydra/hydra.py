@@ -69,6 +69,20 @@ class hydra_api:
         return r.json()
 
 
+    def __del_api(self, endpoint, parameters=None, payload=None):
+        authentication=(self.username, self.password)
+
+        r = requests.delete("{}/{}".format(self.base_api_uri, endpoint),
+                params=parameters, auth=authentication, json=payload,
+                verify=self.ca_certificate_path)
+        if r.status_code != 200:
+            print(r.text)
+            raise Exception('''Posting information to '{}' failed.\n
+                    Error Code: {}'''.format(endpoint, r.status_code))
+
+        return r.json()
+
+
     ### Account Functions
     def get_account_details(self, account_number):
         return self.__get_api('accounts/{}'.format(account_number))
@@ -104,6 +118,20 @@ class hydra_api:
                 for n in self.__get_api(
                     'accounts/{}/notes'.format(account_number))
                 ]
+
+
+    def post_account_notes(self, account_number, body="", intendedReviewDate=None, needsReview=False, retired=False, subject="", noteType="Key Notes"):
+
+        content = {'note':{}}
+        content['note'].update({'body': body})
+        if intendedReviewDate: content['note'].update({'intendedReviewDate':intendedReviewDate})
+        content['note'].update({'needsReview':needsReview})
+        content['note'].update({'retired':retired})
+        content['note'].update({'type':noteType})
+        content['note'].update({'subject':subject})
+
+        return __post_api('accounts/{}/notes'.format(account_number), payload=content)
+
 
 
     ### Case Functions
