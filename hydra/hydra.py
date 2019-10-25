@@ -77,10 +77,14 @@ class hydra_api:
                 verify=self.ca_certificate_path)
         if r.status_code != 200:
             print(r.text)
-            raise Exception('''Posting information to '{}' failed.\n
+            raise Exception('''Deleting information from '{}' failed.\n
                     Error Code: {}'''.format(endpoint, r.status_code))
-
-        return r.json()
+        try:
+            response = r.json()
+        except:
+            response = r.text
+        if response == '': response = 'Deleting information from "{}" succeeded.'.format(endpoint)
+        return response
 
 
     ### Account Functions
@@ -114,7 +118,7 @@ class hydra_api:
         ## The data returned from notes is too much (filtered return)
         return [
                 {'type': n['type'], 'subject': n['subject'],
-                    'active': n['isRetired'], 'note': n['body']}
+                    'active': n['isRetired'], 'note': n['body'], 'id': n['id']}
                 for n in self.__get_api(
                     'accounts/{}/notes'.format(account_number))
                 ]
@@ -133,6 +137,9 @@ class hydra_api:
         return __post_api('accounts/{}/notes'.format(account_number), payload=content)
 
 
+    def del_account_notes(self, account_number, noteID):
+        content = {'note':{'id':noteID}}
+        return __del_api('accounts/{}/notes'.format(account_number), payload=content)
 
     ### Case Functions
     def get_case_details(self, case_number):
