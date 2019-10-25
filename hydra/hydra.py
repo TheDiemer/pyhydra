@@ -125,7 +125,6 @@ class hydra_api:
 
 
     def post_account_notes(self, account_number, body="", intendedReviewDate=None, needsReview=False, retired=False, subject="", noteType="Key Notes"):
-
         content = {'note':{}}
         content['note'].update({'body': body})
         if intendedReviewDate: content['note'].update({'intendedReviewDate':intendedReviewDate})
@@ -134,12 +133,12 @@ class hydra_api:
         content['note'].update({'type':noteType})
         content['note'].update({'subject':subject})
 
-        return __post_api('accounts/{}/notes'.format(account_number), payload=content)
+        return self.__post_api('accounts/{}/notes'.format(account_number), payload=content)
 
 
     def del_account_notes(self, account_number, noteID):
         content = {'note':{'id':noteID}}
-        return __del_api('accounts/{}/notes'.format(account_number), payload=content)
+        return self.__del_api('accounts/{}/notes'.format(account_number), payload=content)
 
     ### Case Functions
     def get_case_details(self, case_number):
