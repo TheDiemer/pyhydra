@@ -5,7 +5,7 @@ RestAPI Docs: https://access.redhat.com/hydra/rest/api-docs
 
 # Where this libarary is used: 
 
-- Backing Library for https://gitlab.cee.redhat.com/erich/pyhydra-cli
+- Backing Library for https://github.com/TheDiemer/pyhydra-cli
 
 
 ## Building pyhydra

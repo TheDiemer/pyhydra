@@ -11,7 +11,7 @@ setuptools.setup(
     description="Python API for interacting with Hydra",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://gitlab.cee.redhat.com/erich/pyhydra",
+    url="https://github.com/TheDiemer/pyhydra",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
