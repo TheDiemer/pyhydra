@@ -234,7 +234,7 @@ class hydra_api:
         if version: body.update({'version': version})
         if sbrGroup: body.update({'sbrGroup': sbrGroup})
         if caseLanguage: body.update({'caseLanguage': caseLanguage})
-        if contact: body.update({'contactSsoUsername':contact})
+        if contact: body.update({'contactSSOName':contact})
 
         return self.__post_api('cases/', payload=body)
 
