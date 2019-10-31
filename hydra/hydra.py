@@ -221,7 +221,8 @@ class hydra_api:
         return self.__get_api('products/{}/versions'.format('%20'.join(product.split())))
 
     def create_case(self, account_number=None, severity=None, subject=None,
-            description=None, product=None, version=None, sbrGroup=None, caseLanguage=None):
+            description=None, product=None, version=None, sbrGroup=None,
+            caseLanguage=None, contact=None):
 
         body = {}
 
@@ -233,6 +234,7 @@ class hydra_api:
         if version: body.update({'version': version})
         if sbrGroup: body.update({'sbrGroup': sbrGroup})
         if caseLanguage: body.update({'caseLanguage': caseLanguage})
+        if contact: body.update({'contactSsoUsername':contact})
 
         return self.__post_api('cases/', payload=body)
 
