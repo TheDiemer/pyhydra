@@ -246,6 +246,11 @@ class hydra_api:
                     "doNotChangeSBT": doNotChangeSBT, "isPublic": isPublic})
 
 
+    def put_tag(self, case_number, tags=[]):
+        return self.__put_api('cases/{}/tags'.format(case_number),
+                payload={"tags":tags})
+
+
     def query_cases(self, status=[], fields=[], accounts=[], cases=[],
            sbrGroups=[], needsNewOwner=None, severity=[], serviceLevel=[],
            fts=None, ownerSsousername=[]):
