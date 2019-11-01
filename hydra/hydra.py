@@ -240,10 +240,21 @@ class hydra_api:
 
 
     def put_case_comment(self, case_number, comment="",
-            doNotChangeSBT=False, isPublic=True):
-        return self.__put_api('cases/comments',
-                payload={"caseNumber":case_number, "commentBody":comment,
-                    "doNotChangeSBT": doNotChangeSBT, "isPublic": isPublic})
+            doNotChangeSBT=False, isPublic=True, newStatus="",
+            newInternalStatus=""):
+        payload = {
+                "caseComment": {},
+                "additionalData": {}
+        }
+        payload["caseComment"].update({"caseNumber": case_number})
+        if comment: payload["caseComment"].update({"commentBody": comment})
+        if doNotChangeSBT: payload["caseComment"].update({"doNotChangeSBT": doNotChangeSBT})
+        if isPublic: payload["caseComment"].update({"isPublic": isPublic})
+
+        if newStatus: payload["additionalData"].update({"newStatus": newStatus})
+        if newInternalStatus: payload["additionalData"].update({"newInternalStatus": newInternalStatus})
+        return self.__put_api('cases/v2/comments',
+                payload=payload)
 
 
     def put_tag(self, case_number, tags=[]):
