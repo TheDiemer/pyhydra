@@ -241,7 +241,7 @@ class hydra_api:
 
     def put_case_comment(self, case_number, comment="",
             doNotChangeSBT=False, isPublic=True):
-        return self.__put_api('/cases/comments',
+        return self.__put_api('cases/comments',
                 payload={"caseNumber":case_number, "commentBody":comment,
                     "doNotChangeSBT": doNotChangeSBT, "isPublic": isPublic})
 
@@ -249,6 +249,11 @@ class hydra_api:
     def put_tag(self, case_number, tags=[]):
         return self.__put_api('cases/{}/tags'.format(case_number),
                 payload={"tags":tags})
+
+
+    def put_owner(self, case_number, user=""):
+        return self.__put_api("cases/{}/owner".format(case_number),
+                payload=user)
 
 
     def query_cases(self, status=[], fields=[], accounts=[], cases=[],
