@@ -171,7 +171,7 @@ class hydra_api:
         return [
                 {'key': t['resourceKey'], 'url': t['resourceURL'],
                     'system': t['system'], 'instance': t['systemInstance']}
-                for t in self.__get_api('cases/{}/jiras'.format(case_number))
+                for t in self.__get_api('cases/{}/externaltrackers'.format(case_number))
                 ]
 
 
