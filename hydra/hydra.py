@@ -269,7 +269,7 @@ class hydra_api:
 
     def query_cases(self, status=[], fields=[], accounts=[], cases=[],
            sbrGroups=[], needsNewOwner=None, severity=[], serviceLevel=[],
-           fts=None, ownerSsousername=[]):
+           fts=None, ownerSsousername=[], tags=[]):
        query_params = {}
 
        if status: query_params.update({'status': ", ".join(status)})
@@ -284,5 +284,7 @@ class hydra_api:
        if fts: query_params.update({'fts': fts})
        if ownerSsousername:
            query_params.update({'ownerSsousername': ", ".join(ownerSsousername)})
+       if tags:
+           query_params.update({'tags': ", ".join(tags)})
 
        return self.__get_api('cases/', parameters=query_params)
