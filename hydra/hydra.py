@@ -222,7 +222,7 @@ class hydra_api:
 
     def create_case(self, account_number=None, severity=None, subject=None,
             description=None, product=None, version=None, sbrGroup=None,
-            caseLanguage=None, contact=None):
+            caseLanguage=None, contact=None, clusterID=None):
 
         body = {}
 
@@ -235,6 +235,7 @@ class hydra_api:
         if sbrGroup: body.update({'sbrGroup': sbrGroup})
         if caseLanguage: body.update({'caseLanguage': caseLanguage})
         if contact: body.update({'contactSSOName':contact})
+        if clusterID: body.update({'openshiftClusterID':clusterID})
 
         return self.__post_api('cases/', payload=body)
 
