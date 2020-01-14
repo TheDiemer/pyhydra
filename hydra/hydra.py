@@ -242,7 +242,8 @@ class hydra_api:
 
     def put_case_comment(self, case_number, comment="",
             doNotChangeSBT=False, isPublic=True, newStatus="",
-            newInternalStatus=""):
+            newInternalStatus="", nno=" ", newResolution="",
+            newResolutionDescription=""):
         payload = {
                 "caseComment": {},
                 "additionalData": {}
@@ -254,6 +255,10 @@ class hydra_api:
 
         if newStatus: payload["additionalData"].update({"newStatus": newStatus})
         if newInternalStatus: payload["additionalData"].update({"newInternalStatus": newInternalStatus})
+        if nno: payload["additionalData"].update({"needsNewOwner": nno})
+        # Both of these fields are for setting the Resolution status and a brief description of how it was resolved. To be used when setting the newStatus and newInternalStatus to "Closed"
+        if newResolution: payload["additionalData"].update({"newResolution": newResolution})
+        if newResolutionDescription: payload["additionalData"].update({"newResolutionDescription": newResolutionDescription})
         return self.__put_api('cases/v2/comments',
                 payload=payload)
 
