@@ -107,9 +107,12 @@ class hydra_api:
 
         ## The data returned from entitlements is too much (filtered return)
         return [
-                {'name': e['name'], 'startDate': e['startDate'],
-                'endDate': e['endDate'], 'sku': e['externalProductCode'],
-                'quantity': e['quantity'], 'supportLevel': e['supportLevel']}
+                {'name': e.get('name', "Unknown"),
+                    'startDate': e.get('startDate', None),
+                    'endDate': e.get('endDate', None),
+                    'sku': e.get('externalProductCode', None),
+                    'quantity': e.get('quantity', None),
+                    'supportLevel': e.get('supportLevel', None)}
                 for e in self.__get_api(endpoint)
                 ]
 
