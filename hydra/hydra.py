@@ -200,6 +200,49 @@ class hydra_api:
         return self.__get_api('cases/{}/contacts'.format(case_number))
 
 
+    def get_case_comments(self, case_number):
+        comment_data = []
+        comments = self.__get_api('cases/{}/comments'.format(case_number))
+        for comment in comments:
+            commenter_type = comment.get('createdByType', 'None')
+
+            if commenter_type == 'Bug': #TODO: Enhance this
+                ### Skipping Comments from bugs and jira's (this seems to work)
+                continue
+            if 'createdByContact' in comment:
+                comment_data.append({
+                    'create_date': comment.get('lastModifiedDateCustom'),
+                    'commenter': comment.get(
+                        'createdByContact').get('fullNameCustom'),
+                    'commenter_region': comment.get(
+                        'createdByContact').get('timezone'),
+                    'commenter_email': comment.get(
+                        'createdByContact').get('email'),
+                    'comment_body': comment.get('commentBody'),
+                    'isPublic': comment.get('isPublic'),
+                    'isDraft': comment.get('isDraft'),
+                    'isBreached': comment.get('inBreach')
+                    })
+            elif 'createdByUser' in comment:
+                comment_data.append({
+                    'create_date': comment.get('lastModifiedDateCustom'),
+                    'commenter': comment.get('createdByUser').get('name'),
+                    'commenter_region': comment.get(
+                        'createdByUser').get('region'),
+                    'commenter_email': comment.get(
+                        'createdByUser').get('email'),
+                    'comment_body': comment.get('commentBody'),
+                    'isPublic': comment.get('isPublic'),
+                    'isDraft': comment.get('isDraft'),
+                    'isBreached': comment.get('inBreach')
+                    })
+            else:
+                pass ## If this happens exiting this way is bad)
+                # TODO: Fix this and thow an error!
+
+        return comment_data
+
+
     def get_case_associates(self, case_number):
         data = []
 
