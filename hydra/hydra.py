@@ -1,7 +1,9 @@
 #!/bin/python
 
-import requests
+import requests, warnings, functools
 from concurrent.futures import ThreadPoolExecutor
+
+
 
 class hydra_api:
 
@@ -102,6 +104,19 @@ class hydra_api:
             response = r.text
         if response == '': response = 'Deleting information from "{}" succeeded.'.format(endpoint)
         return response
+
+    def deprecated(func):
+        """This is a decorator which can be used to mark functions
+        as deprecated. It will result in a warning being emitted
+        when the function is used."""
+        def new_func(*args, **kwargs):
+            warnings.simplefilter('always', DeprecationWarning)
+            warnings.warn("Call to deprecated function {}".format(func.__name__),
+                    category=DeprecationWarning,
+                    stacklevel=2)
+            warnings.simplefilter('default', DeprecationWarning)
+            return func(*args, **kwargs)
+        return new_func
 
 
     ### Account Functions
@@ -340,6 +355,7 @@ class hydra_api:
                 payload=user)
 
 
+    @deprecated
     def query_cases(self, status=[], fields=[], accounts=[], cases=[],
            sbrGroups=[], needsNewOwner=None, severity=[], serviceLevel=[],
            fts=None, ownerSsousername=[], tags=[]):
