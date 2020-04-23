@@ -27,13 +27,30 @@ class hydra_api:
         self.thread_pool.shutdown(wait=True)
 
 
+    def __pretty_print_REQ(self, req):
+        print('{}\n{}\n{}\n\n{}'.format('-----------BEGIN REQUEST-----------',
+            req.method + ' ' + req.url,
+            '\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
+            req.body,
+            ))
+
     # TODO: Consider refactoring this (next 3 methods) back to __call_api,
     #        __call_api should take in the 'method' to run (and execute that).
-    def __get_api(self, endpoint, parameters=None):
+    def __get_api(self, endpoint, parameters=None, headers=None):
         authentication=(self.username, self.password)
 
+        ## NOTE: This is how you debug a http request.
+        # bare = requests.Request('GET', "{}/{}".format(self.base_api_uri, endpoint),
+        #         params=parameters, headers=headers, auth=authentication)
+        # prepared = bare.prepare()
+        # self.__pretty_print_REQ(prepared)
+        # s = requests.Session()
+        # s.verify = self.ca_certificate_path
+        # r = s.send(prepared)
+
+        # NOTE: Comment this out; if you use the block above.
         r = requests.get("{}/{}".format(self.base_api_uri, endpoint),
-                params=parameters, auth=authentication,
+                params=parameters, headers=headers, auth=authentication,
                 verify=self.ca_certificate_path)
         if r.status_code == 204:
             return []
@@ -331,7 +348,7 @@ class hydra_api:
        if status: query_params.update({'status': ", ".join(status)})
        if fields: query_params.update({'fields': ", ".join(fields)})
        if accounts: query_params.update({'accounts': ", ".join(accounts)})
-       if cases: query_params.update({'cases': ", ".join(cases)})
+       if cases: query_params.update({'case_number': ", ".join(cases)})
        if sbrGroups: query_params.update({'sbrGroups': ", ".join(sbrGroups)})
        if needsNewOwner: query_params.update({'needsNewOwner': needsNewOwner})
        if severity: query_params.update({'severity': ", ".join(severity)})
@@ -344,3 +361,43 @@ class hydra_api:
            query_params.update({'tags': ", ".join(tags)})
 
        return self.__get_api('cases/', parameters=query_params)
+
+
+    def search_cases(self, fields=[], accounts=[], cases=[],
+        sbrGroups=[], ownerSsousername=[], tags=[], cluster_ids=[]):
+
+        query_params = {}
+        ## Pulls back a lot if your not filtering! A field filter is recommended.
+        if fields: query_params.update({'fl': ",".join(fields)})
+
+        ## Mutually Exclusive Search!!!
+        ## You can only search based on 1 paramiter! accounts, cases, etc.
+
+        if accounts:
+            query_params.update({'q':
+                'case_accountNumber:({})'.format(' OR '.join(accounts))})
+
+        if cases:
+            query_params.update({'q':
+                'case_number:({})'.format(' OR '.join(cases))})
+
+        if ownerSsousername:
+            query_params.update({'q':
+                'case_owner_sso_username:({})'.format(' OR '.join(
+                    ownerSsousername))})
+
+        if sbrGroups:
+            query_params.update({'q': 
+                'case_sbr:({})'.format(' OR '.join(sbrGroups))})
+
+        if tags:
+            uery_params.update({'q':
+                'case_tags:({})'.format(' OR '.join(tags))})
+
+        if cluster_ids:
+            query_params.update({'q':
+                'case_openshift_cluster_id:({})'.format(' OR '.join(
+                    cluster_ids))})
+
+        return self.__get_api('search/cases/', parameters=query_params,
+                headers={'Content-Type': 'application/json'})
