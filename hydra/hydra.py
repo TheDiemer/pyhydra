@@ -363,41 +363,51 @@ class hydra_api:
        return self.__get_api('cases/', parameters=query_params)
 
 
-    def search_cases(self, fields=[], accounts=[], cases=[],
-        sbrGroups=[], ownerSsousername=[], tags=[], cluster_ids=[]):
+    def search_cases(self, **params):#fields=[], accounts=[], cases=[],
+        #sbrGroups=[], ownerSsousername=[], tags=[], cluster_ids=[]):
 
         query_params = {}
-        ## Pulls back a lot if your not filtering! A field filter is recommended.
-        if fields: query_params.update({'fl': ",".join(fields)})
+        # Looping back over the incoming kwargs
+        for k, v in params.items():
+            ## Fields add a much needed filter as the query will return a LOT of information without some!
+            if k.lower() == "fl":
+                query_params.update({'fl': ",".join(v)})
+            # Everything else is a Query so it goes under q
+            ## This is a Mutually exclusive search!
+            ## So you can only search based on a single parameter at a time (accounts, or cases, or etc.)
+            else:
+                query_params.update({"q": "{0}({1})".format(k, " OR ".join(v))})
+        ### Pulls back a lot if your not filtering! A field filter is recommended.
+        #if fields: query_params.update({'fl': ",".join(fields)})
 
-        ## Mutually Exclusive Search!!!
-        ## You can only search based on 1 paramiter! accounts, cases, etc.
+        ### Mutually Exclusive Search!!!
+        ### You can only search based on 1 paramiter! accounts, cases, etc.
 
-        if accounts:
-            query_params.update({'q':
-                'case_accountNumber:({})'.format(' OR '.join(accounts))})
+        #if accounts:
+        #    query_params.update({'q':
+        #        'case_accountNumber:({})'.format(' OR '.join(accounts))})
 
-        if cases:
-            query_params.update({'q':
-                'case_number:({})'.format(' OR '.join(cases))})
+        #if cases:
+        #    query_params.update({'q':
+        #        'case_number:({})'.format(' OR '.join(cases))})
 
-        if ownerSsousername:
-            query_params.update({'q':
-                'case_owner_sso_username:({})'.format(' OR '.join(
-                    ownerSsousername))})
+        #if ownerSsousername:
+        #    query_params.update({'q':
+        #        'case_owner_sso_username:({})'.format(' OR '.join(
+        #            ownerSsousername))})
 
-        if sbrGroups:
-            query_params.update({'q': 
-                'case_sbr:({})'.format(' OR '.join(sbrGroups))})
+        #if sbrGroups:
+        #    query_params.update({'q': 
+        #        'case_sbr:({})'.format(' OR '.join(sbrGroups))})
 
-        if tags:
-            uery_params.update({'q':
-                'case_tags:({})'.format(' OR '.join(tags))})
+        #if tags:
+        #    uery_params.update({'q':
+        #        'case_tags:({})'.format(' OR '.join(tags))})
 
-        if cluster_ids:
-            query_params.update({'q':
-                'case_openshift_cluster_id:({})'.format(' OR '.join(
-                    cluster_ids))})
+        #if cluster_ids:
+        #    query_params.update({'q':
+        #        'case_openshift_cluster_id:({})'.format(' OR '.join(
+        #            cluster_ids))})
 
         return self.__get_api('search/cases/', parameters=query_params,
                 headers={'Content-Type': 'application/json'})
