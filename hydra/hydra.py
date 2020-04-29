@@ -49,16 +49,26 @@ class hydra_api:
         # r = s.send(prepared)
 
         # NOTE: Comment this out; if you use the block above.
-        r = requests.get("{}/{}".format(self.base_api_uri, endpoint),
-                params=parameters, headers=headers, auth=authentication,
-                verify=self.ca_certificate_path)
-        if r.status_code == 204:
-            return []
-        if r.status_code != 200:
-            raise Exception('''looking up infomation from: {}\n
-                    Error Code: {}'''.format(endpoint, r.status_code))
+        try:
+            r = requests.get("{}/{}".format(self.base_api_uri, endpoint),
+                    params=parameters, headers=headers, auth=authentication,
+                    verify=self.ca_certificate_path)
+            if r.status_code == 204:
+                return []
+            if r.status_code != 200:
+                raise Exception('''looking up infomation from: {}\n
+                        Error Code: {}'''.format(endpoint, r.status_code))
 
-        return r.json()
+            try:
+                return r.json()
+            except:
+                raise Exception("""looking up information from: {}\n
+                    Error returning json: {}""".format(endpoint, e))
+                return []
+        except Exception as e:
+            raise Exception("""looking up information from: {}\n
+                Error during request call: {}""".format(endpoint, e))
+            return []
 
 
     def __put_api(self, endpoint, parameters=None, payload=None):
