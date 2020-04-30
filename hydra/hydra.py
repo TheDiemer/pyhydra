@@ -427,7 +427,11 @@ class hydra_api:
     def put_owner(self, case_number, user=""):
         return self.__put_api("cases/{}/owner".format(case_number), payload=user)
 
-    @deprecation.deprecated(deprecated_in="0.1", removed_in="1.0", details="Use the search_cases function instead")
+    @deprecation.deprecated(
+        deprecated_in="0.1",
+        removed_in="1.0",
+        details="Use the search_cases function instead",
+    )
     def query_cases(
         self,
         status=[],
