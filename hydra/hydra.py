@@ -53,6 +53,7 @@ class hydra_api:
         # r = s.send(prepared)
 
         # NOTE: Comment this out; if you use the block above.
+<<<<<<< HEAD
         r = requests.get(
             "{}/{}".format(self.base_api_uri, endpoint),
             params=parameters,
@@ -69,6 +70,26 @@ class hydra_api:
                     endpoint, r.status_code
                 )
             )
+=======
+        try:
+            r = requests.get("{}/{}".format(self.base_api_uri, endpoint),
+                    params=parameters, headers=headers, auth=authentication,
+                    verify=self.ca_certificate_path)
+            if r.status_code == 204:
+                return []
+            if r.status_code != 200:
+                raise Exception('''looking up infomation from: {}\n
+                        Error Code: {}'''.format(endpoint, r.status_code))
+            try:
+                return r.json()
+            except:
+                response = []
+                raise Exception("""looking up information from: {}\n
+                    Error returning json""".format(endpoint))
+        except Exception:
+            raise Exception("""looking up information from: {}\n
+                Error during request call""".format(endpoint))
+>>>>>>> removing the finally return as it hid the exceptions which were intentional. Also figured out the syntax for adding Multiple queries (such as all cases from a specific SBR created during a specific date range
 
         return r.json()
 
@@ -477,41 +498,18 @@ class hydra_api:
             if k.lower() == "fl":
                 query_params.update({'fl': ",".join(v)})
             # Everything else is a Query so it goes under q
-            ## This is a Mutually exclusive search!
-            ## So you can only search based on a single parameter at a time (accounts, or cases, or etc.)
             else:
-                query_params.update({"q": "{0}({1})".format(k, " OR ".join(v))})
-        ### Pulls back a lot if your not filtering! A field filter is recommended.
-        #if fields: query_params.update({'fl': ",".join(fields)})
-
-        ### Mutually Exclusive Search!!!
-        ### You can only search based on 1 paramiter! accounts, cases, etc.
-
-        #if accounts:
-        #    query_params.update({'q':
-        #        'case_accountNumber:({})'.format(' OR '.join(accounts))})
-
-        #if cases:
-        #    query_params.update({'q':
-        #        'case_number:({})'.format(' OR '.join(cases))})
-
-        #if ownerSsousername:
-        #    query_params.update({'q':
-        #        'case_owner_sso_username:({})'.format(' OR '.join(
-        #            ownerSsousername))})
-
-        #if sbrGroups:
-        #    query_params.update({'q': 
-        #        'case_sbr:({})'.format(' OR '.join(sbrGroups))})
-
-        #if tags:
-        #    uery_params.update({'q':
-        #        'case_tags:({})'.format(' OR '.join(tags))})
-
-        #if cluster_ids:
-        #    query_params.update({'q':
-        #        'case_openshift_cluster_id:({})'.format(' OR '.join(
-        #            cluster_ids))})
+                # Modifying the way the value is handed to the dictionary if handed a list or not
+                if isinstance(v, list):
+                    if 'q' in query_params.keys():
+                        query_params.update({"fq": "{0}:({1})".format(k, " OR ".join(v))})
+                    else:
+                         query_params.update({"q": "{0}:({1})".format(k, " OR ".join(v))})
+                else:
+                    if "q" in query_params.keys():
+                        query_params.update({"fq": "{0}:{1}".format(k, v)})
+                    else:
+                        query_params.update({"q": "{0}:{1}".format(k, v)})
 
         return self.__get_api('search/cases/', parameters=query_params,
                 headers={'Content-Type': 'application/json'})
