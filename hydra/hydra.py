@@ -54,21 +54,23 @@ class hydra_api:
                     params=parameters, headers=headers, auth=authentication,
                     verify=self.ca_certificate_path)
             if r.status_code == 204:
-                return []
+                response = []
             if r.status_code != 200:
+                response = []
                 raise Exception('''looking up infomation from: {}\n
                         Error Code: {}'''.format(endpoint, r.status_code))
-
             try:
-                return r.json()
+                response = r.json()
             except:
+                response = []
                 raise Exception("""looking up information from: {}\n
-                    Error returning json: {}""".format(endpoint, e))
-                return []
-        except Exception as e:
+                    Error returning json""".format(endpoint))
+        except Exception:
+            response = []
             raise Exception("""looking up information from: {}\n
-                Error during request call: {}""".format(endpoint, e))
-            return []
+                Error during request call""".format(endpoint))
+        finally:
+            return response
 
 
     def __put_api(self, endpoint, parameters=None, payload=None):
@@ -394,7 +396,7 @@ class hydra_api:
                 if isinstance(v, list):
                     query_params.update({"q": "{0}:({1})".format(k, " OR ".join(v))})
                 else:
-                    query_params.update({"q": "{0}:({1})".format(k, v)})
+                    query_params.update({"q": "{0}:{1}".format(k, v)})
 
         return self.__get_api('search/cases/', parameters=query_params,
                 headers={'Content-Type': 'application/json'})
