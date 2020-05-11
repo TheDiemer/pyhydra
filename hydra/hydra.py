@@ -1,14 +1,17 @@
 #!/bin/python
 
-import requests
+import requests, warnings, functools, deprecation
 from concurrent.futures import ThreadPoolExecutor
 
+
 class hydra_api:
-
-
-    def __init__(self, api="https://access.redhat.com/hydra/rest/",
-            ca_path="/etc/pki/tls/certs/ca-bundle.crt", username=None,
-            password=None):
+    def __init__(
+        self,
+        api="https://access.redhat.com/hydra/rest/",
+        ca_path="/etc/pki/tls/certs/ca-bundle.crt",
+        username=None,
+        password=None,
+    ):
         if username is None or password is None:
             raise Exception("Username or Password were not supplied.")
 
@@ -17,27 +20,28 @@ class hydra_api:
         self.password = password
 
         self.ca_certificate_path = ca_path
-        if ca_path == False: # Used to Disable SSL warning (from each api call)
+        if ca_path == False:  # Used to Disable SSL warning (from each api call)
             requests.packages.urllib3.disable_warnings()
 
         self.thread_pool = ThreadPoolExecutor(4)
 
-
     def __del__(self):
         self.thread_pool.shutdown(wait=True)
 
-
     def __pretty_print_REQ(self, req):
-        print('{}\n{}\n{}\n\n{}'.format('-----------BEGIN REQUEST-----------',
-            req.method + ' ' + req.url,
-            '\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
-            req.body,
-            ))
+        print(
+            "{}\n{}\n{}\n\n{}".format(
+                "-----------BEGIN REQUEST-----------",
+                req.method + " " + req.url,
+                "\n".join("{}: {}".format(k, v) for k, v in req.headers.items()),
+                req.body,
+            )
+        )
 
     # TODO: Consider refactoring this (next 3 methods) back to __call_api,
     #        __call_api should take in the 'method' to run (and execute that).
     def __get_api(self, endpoint, parameters=None, headers=None):
-        authentication=(self.username, self.password)
+        authentication = (self.username, self.password)
 
         ## NOTE: This is how you debug a http request.
         # bare = requests.Request('GET', "{}/{}".format(self.base_api_uri, endpoint),
@@ -49,355 +53,475 @@ class hydra_api:
         # r = s.send(prepared)
 
         # NOTE: Comment this out; if you use the block above.
-        r = requests.get("{}/{}".format(self.base_api_uri, endpoint),
-                params=parameters, headers=headers, auth=authentication,
-                verify=self.ca_certificate_path)
+        r = requests.get(
+            "{}/{}".format(self.base_api_uri, endpoint),
+            params=parameters,
+            headers=headers,
+            auth=authentication,
+            verify=self.ca_certificate_path,
+        )
         if r.status_code == 204:
             return []
         if r.status_code != 200:
-            raise Exception('''looking up infomation from: {}\n
-                    Error Code: {}'''.format(endpoint, r.status_code))
+            raise Exception(
+                """looking up infomation from: {}\n
+                    Error Code: {}""".format(
+                    endpoint, r.status_code
+                )
+            )
 
         return r.json()
-
 
     def __put_api(self, endpoint, parameters=None, payload=None):
-        authentication=(self.username, self.password)
+        authentication = (self.username, self.password)
 
-        r = requests.put("{}/{}".format(self.base_api_uri, endpoint),
-                params=parameters, auth=authentication, json=payload,
-                verify=self.ca_certificate_path)
+        r = requests.put(
+            "{}/{}".format(self.base_api_uri, endpoint),
+            params=parameters,
+            auth=authentication,
+            json=payload,
+            verify=self.ca_certificate_path,
+        )
         if r.status_code != 200:
-            raise Exception('''Putting information to '{}' failed.\n
-                    Error Code: {}'''.format(endpoint, r.status_code))
-
+            raise Exception(
+                """Putting information to '{}' failed.\n
+                    Error Code: {}""".format(
+                    endpoint, r.status_code
+                )
+            )
 
     def __post_api(self, endpoint, parameters=None, payload=None):
-        authentication=(self.username, self.password)
+        authentication = (self.username, self.password)
 
-        r = requests.post("{}/{}".format(self.base_api_uri, endpoint),
-                params=parameters, auth=authentication, json=payload,
-                verify=self.ca_certificate_path)
+        r = requests.post(
+            "{}/{}".format(self.base_api_uri, endpoint),
+            params=parameters,
+            auth=authentication,
+            json=payload,
+            verify=self.ca_certificate_path,
+        )
         if r.status_code != 200:
             print(r.text)
-            raise Exception('''Posting information to '{}' failed.\n
-                    Error Code: {}'''.format(endpoint, r.status_code))
+            raise Exception(
+                """Posting information to '{}' failed.\n
+                    Error Code: {}""".format(
+                    endpoint, r.status_code
+                )
+            )
 
         return r.json()
 
-
     def __del_api(self, endpoint, parameters=None, payload=None):
-        authentication=(self.username, self.password)
+        authentication = (self.username, self.password)
 
-        r = requests.delete("{}/{}".format(self.base_api_uri, endpoint),
-                params=parameters, auth=authentication, json=payload,
-                verify=self.ca_certificate_path)
+        r = requests.delete(
+            "{}/{}".format(self.base_api_uri, endpoint),
+            params=parameters,
+            auth=authentication,
+            json=payload,
+            verify=self.ca_certificate_path,
+        )
         if r.status_code != 200:
             print(r.text)
-            raise Exception('''Deleting information from '{}' failed.\n
-                    Error Code: {}'''.format(endpoint, r.status_code))
+            raise Exception(
+                """Deleting information from '{}' failed.\n
+                    Error Code: {}""".format(
+                    endpoint, r.status_code
+                )
+            )
         try:
             response = r.json()
         except:
             response = r.text
-        if response == '': response = 'Deleting information from "{}" succeeded.'.format(endpoint)
+        if response == "":
+            response = 'Deleting information from "{}" succeeded.'.format(endpoint)
         return response
-
 
     ### Account Functions
     def get_account_details(self, account_number):
-        return self.__get_api('accounts/{}'.format(account_number))
-
+        return self.__get_api("accounts/{}".format(account_number))
 
     def get_account_contacts(self, account_number):
-        return self.__get_api('accounts/{}/contacts'.format(account_number))
-
+        return self.__get_api("accounts/{}/contacts".format(account_number))
 
     def get_account_associates(self, account_number):
-        return self.__get_api('accounts/{}/associates'.format(account_number))
-
+        return self.__get_api("accounts/{}/associates".format(account_number))
 
     def get_account_entitlements(self, account_number):
-        product = 'your_api_is_broken'
+        product = "your_api_is_broken"
         endpoint = "entitlements/account/{}/?product={}&showAll=true".format(
-                account_number, product)
+            account_number, product
+        )
 
         ## The data returned from entitlements is too much (filtered return)
         return [
-                {'name': e.get('name', "Unknown"),
-                    'startDate': e.get('startDate', None),
-                    'endDate': e.get('endDate', None),
-                    'sku': e.get('externalProductCode', None),
-                    'quantity': e.get('quantity', None),
-                    'supportLevel': e.get('supportLevel', None)}
-                for e in self.__get_api(endpoint)
-                ]
-
+            {
+                "name": e.get("name", "Unknown"),
+                "startDate": e.get("startDate", None),
+                "endDate": e.get("endDate", None),
+                "sku": e.get("externalProductCode", None),
+                "quantity": e.get("quantity", None),
+                "supportLevel": e.get("supportLevel", None),
+            }
+            for e in self.__get_api(endpoint)
+        ]
 
     def get_account_notes(self, account_number):
         ## The data returned from notes is too much (filtered return)
         return [
-                {'type': n['type'], 'subject': n['subject'],
-                    'active': n['isRetired'], 'note': n['body'], 'id': n['id']}
-                for n in self.__get_api(
-                    'accounts/{}/notes'.format(account_number))
-                ]
+            {
+                "type": n["type"],
+                "subject": n["subject"],
+                "active": n["isRetired"],
+                "note": n["body"],
+                "id": n["id"],
+            }
+            for n in self.__get_api("accounts/{}/notes".format(account_number))
+        ]
 
+    def post_account_notes(
+        self,
+        account_number,
+        body="",
+        intendedReviewDate=None,
+        needsReview=False,
+        retired=False,
+        subject="",
+        noteType="Key Notes",
+    ):
+        content = {"note": {}}
+        content["note"].update({"body": body})
+        if intendedReviewDate:
+            content["note"].update({"intendedReviewDate": intendedReviewDate})
+        content["note"].update({"needsReview": needsReview})
+        content["note"].update({"retired": retired})
+        content["note"].update({"type": noteType})
+        content["note"].update({"subject": subject})
 
-    def post_account_notes(self, account_number, body="", intendedReviewDate=None, needsReview=False, retired=False, subject="", noteType="Key Notes"):
-        content = {'note':{}}
-        content['note'].update({'body': body})
-        if intendedReviewDate: content['note'].update({'intendedReviewDate':intendedReviewDate})
-        content['note'].update({'needsReview':needsReview})
-        content['note'].update({'retired':retired})
-        content['note'].update({'type':noteType})
-        content['note'].update({'subject':subject})
-
-        return self.__post_api('accounts/{}/notes'.format(account_number), payload=content)
-
+        return self.__post_api(
+            "accounts/{}/notes".format(account_number), payload=content
+        )
 
     def del_account_notes(self, account_number, noteID):
-        content = {'note':{'id':noteID}}
-        return self.__del_api('accounts/{}/notes'.format(account_number), payload=content)
+        content = {"note": {"id": noteID}}
+        return self.__del_api(
+            "accounts/{}/notes".format(account_number), payload=content
+        )
 
     ### Case Functions
     def get_case_details(self, case_number):
-        return self.__get_api('cases/{}'.format(case_number))
-
+        return self.__get_api("cases/{}".format(case_number))
 
     def get_account_number(self, case_number):
         case = self.get_case_details(case_number)
-        return case['accountNumber']
-
+        return case["accountNumber"]
 
     def get_case_bugs(self, case_number):
         ## The data returned from bugs is too much (filtered return)
         return [
-                {'key': b['bugzillaNumber'], 'url': b['bugzillaLink']}
-                for b in self.__get_api('cases/{}/bugs'.format(case_number))
-                ]
-
+            {"key": b["bugzillaNumber"], "url": b["bugzillaLink"]}
+            for b in self.__get_api("cases/{}/bugs".format(case_number))
+        ]
 
     def get_case_jiras(self, case_number):
         ## The data returned from jiras is too much (filtered return)
         return [
-                {'key': j['resourceKey'], 'url': j['resourceURL']}
-                for j in self.__get_api('cases/{}/jiras'.format(case_number))
-                ]
-
+            {"key": j["resourceKey"], "url": j["resourceURL"],}
+            for j in self.__get_api("cases/{}/jiras".format(case_number))
+        ]
 
     def get_case_jira_count(self, case_number):
-        return self.__get_api('cases/{}/count/jiras'.format(case_number))
-
+        return self.__get_api("cases/{}/count/jiras".format(case_number))
 
     def get_case_trackers(self, case_number):
         ## The data returned from trackers is too much (filtered return)
         return [
-                {'key': t['resourceKey'], 'url': t['resourceURL'],
-                    'system': t['system'], 'instance': t['systemInstance']}
-                for t in self.__get_api('cases/{}/externaltrackers'.format(case_number))
-                ]
-
+            {
+                "key": t["resourceKey"],
+                "url": t["resourceURL"],
+                "system": t["system"],
+                "instance": t["systemInstance"],
+            }
+            for t in self.__get_api("cases/{}/externaltrackers".format(case_number))
+        ]
 
     def get_case_resources(self, case_number):
         ## The data returned from resources is too much (filtered return)
         return [
-            {'key': r['resourceId'], 'url': r['resourceViewURI'],
-                'title': r['title'], 'type': r['resourceType'],
-                'exact': r['isExact']}
-            for r in self.__get_api('cases/{}/resources'.format(case_number))
-            ]
-
+            {
+                "key": r["resourceId"],
+                "url": r["resourceViewURI"],
+                "title": r["title"],
+                "type": r["resourceType"],
+                "exact": r["isExact"],
+            }
+            for r in self.__get_api("cases/{}/resources".format(case_number))
+        ]
 
     def get_case_counts(self, case_number):
-        return self.__get_api('cases/{}/count'.format(case_number))
-
+        return self.__get_api("cases/{}/count".format(case_number))
 
     def get_case_contacts(self, case_number):
-        return self.__get_api('cases/{}/contacts'.format(case_number))
-
+        return self.__get_api("cases/{}/contacts".format(case_number))
 
     def get_case_comments(self, case_number):
         comment_data = []
-        comments = self.__get_api('cases/{}/comments'.format(case_number))
+        comments = self.__get_api("cases/{}/comments".format(case_number))
         for comment in comments:
-            commenter_type = comment.get('createdByType', 'None')
+            commenter_type = comment.get("createdByType", "None")
 
-            if commenter_type == 'Bug': #TODO: Enhance this
+            if commenter_type == "Bug":  # TODO: Enhance this
                 ### Skipping Comments from bugs and jira's (this seems to work)
                 continue
-            if 'createdByContact' in comment:
-                comment_data.append({
-                    'create_date': comment.get('lastModifiedDateCustom'),
-                    'commenter': comment.get(
-                        'createdByContact').get('fullNameCustom'),
-                    'commenter_region': comment.get(
-                        'createdByContact').get('timezone'),
-                    'commenter_email': comment.get(
-                        'createdByContact').get('email'),
-                    'comment_body': comment.get('commentBody'),
-                    'isPublic': comment.get('isPublic'),
-                    'isDraft': comment.get('isDraft'),
-                    'isBreached': comment.get('inBreach')
-                    })
-            elif 'createdByUser' in comment:
-                comment_data.append({
-                    'create_date': comment.get('lastModifiedDateCustom'),
-                    'commenter': comment.get('createdByUser').get('name'),
-                    'commenter_region': comment.get(
-                        'createdByUser').get('region'),
-                    'commenter_email': comment.get(
-                        'createdByUser').get('email'),
-                    'comment_body': comment.get('commentBody'),
-                    'isPublic': comment.get('isPublic'),
-                    'isDraft': comment.get('isDraft'),
-                    'isBreached': comment.get('inBreach')
-                    })
+            if "createdByContact" in comment:
+                comment_data.append(
+                    {
+                        "create_date": comment.get("lastModifiedDateCustom"),
+                        "commenter": comment.get("createdByContact").get(
+                            "fullNameCustom"
+                        ),
+                        "commenter_region": comment.get("createdByContact").get(
+                            "timezone"
+                        ),
+                        "commenter_email": comment.get("createdByContact").get("email"),
+                        "comment_body": comment.get("commentBody"),
+                        "isPublic": comment.get("isPublic"),
+                        "isDraft": comment.get("isDraft"),
+                        "isBreached": comment.get("inBreach"),
+                    }
+                )
+            elif "createdByUser" in comment:
+                comment_data.append(
+                    {
+                        "create_date": comment.get("lastModifiedDateCustom"),
+                        "commenter": comment.get("createdByUser").get("name"),
+                        "commenter_region": comment.get("createdByUser").get("region"),
+                        "commenter_email": comment.get("createdByUser").get("email"),
+                        "comment_body": comment.get("commentBody"),
+                        "isPublic": comment.get("isPublic"),
+                        "isDraft": comment.get("isDraft"),
+                        "isBreached": comment.get("inBreach"),
+                    }
+                )
             else:
-                pass ## If this happens exiting this way is bad)
+                pass  ## If this happens exiting this way is bad)
                 # TODO: Fix this and thow an error!
 
         return comment_data
-
 
     def get_case_associates(self, case_number):
         data = []
 
         ## The data returned from users is too much (filtered return)
         def get_case_user_details(associate):
-            user = self.__get_api('users/{}'.format(associate['OwnerId']))
+            user = self.__get_api("users/{}".format(associate["OwnerId"]))
             a_data.append(
-                {'role': associate['role'], 'name': user['fullName'],
-                    'title': user['fullTitle'], 'irc_nick': user['ircNick'],
-                    'ooo': user['outOfOffice'], 'phone': user['phone'],
-                    'email': user['email'], 'region': user['superRegion']}
-                )
+                {
+                    "role": associate["role"],
+                    "name": user["fullName"],
+                    "title": user["fullTitle"],
+                    "irc_nick": user["ircNick"],
+                    "ooo": user["outOfOffice"],
+                    "phone": user["phone"],
+                    "email": user["email"],
+                    "region": user["superRegion"],
+                }
+            )
 
-        associates = self.__get_api('cases/{}/associates'.format(case_number))
+        associates = self.__get_api("cases/{}/associates".format(case_number))
         self.thread_pool.map(get_case_user_details, associates, chunksize=1)
 
         return data
 
-
     def get_case_attachments(self, case_number):
         # This is a non documented api
-        return self.__get_api('cases/{}/attachments'.format(case_number))
-
+        return self.__get_api("cases/{}/attachments".format(case_number))
 
     def get_product_versions(self, product=None):
-        return self.__get_api('products/{}/versions'.format('%20'.join(product.split())))
+        return self.__get_api(
+            "products/{}/versions".format("%20".join(product.split()))
+        )
 
-    def create_case(self, account_number=None, severity=None, subject=None,
-            description=None, product=None, version=None, sbrGroup=None,
-            caseLanguage=None, contact=None, clusterID=None):
+    def create_case(
+        self,
+        account_number=None,
+        severity=None,
+        subject=None,
+        description=None,
+        product=None,
+        version=None,
+        sbrGroup=None,
+        caseLanguage=None,
+        contact=None,
+        clusterID=None,
+    ):
 
         body = {}
 
-        if account_number: body.update({'accountNumber': account_number})
-        if severity: body.update({'severity': severity})
-        if subject: body.update({'subject': subject})
-        if description: body.update({'description': description})
-        if product: body.update({'product': product})
-        if version: body.update({'version': version})
-        if sbrGroup: body.update({'sbrGroup': sbrGroup})
-        if caseLanguage: body.update({'caseLanguage': caseLanguage})
-        if contact: body.update({'contactSSOName':contact})
-        if clusterID: body.update({'openshiftClusterID':clusterID})
+        if account_number:
+            body.update({"accountNumber": account_number})
+        if severity:
+            body.update({"severity": severity})
+        if subject:
+            body.update({"subject": subject})
+        if description:
+            body.update({"description": description})
+        if product:
+            body.update({"product": product})
+        if version:
+            body.update({"version": version})
+        if sbrGroup:
+            body.update({"sbrGroup": sbrGroup})
+        if caseLanguage:
+            body.update({"caseLanguage": caseLanguage})
+        if contact:
+            body.update({"contactSSOName": contact})
+        if clusterID:
+            body.update({"openshiftClusterID": clusterID})
 
-        return self.__post_api('cases/', payload=body)
+        return self.__post_api("cases/", payload=body)
 
-
-    def put_case_comment(self, case_number, comment="",
-            doNotChangeSBT=False, isPublic=True, newStatus="",
-            newInternalStatus="", nno=" ", newResolution="",
-            newResolutionDescription=""):
+    def put_case_comment(
+        self,
+        case_number,
+        comment="",
+        doNotChangeSBT=False,
+        isPublic=True,
+        newStatus="",
+        newInternalStatus="",
+        nno=" ",
+        newResolution="",
+        newResolutionDescription="",
+    ):
         payload = {
-                "caseComment": {},
-                "additionalData": {}
+            "caseComment": {},
+            "additionalData": {},
         }
         payload["caseComment"].update({"caseNumber": case_number})
-        if comment: payload["caseComment"].update({"commentBody": comment})
-        if doNotChangeSBT: payload["caseComment"].update({"doNotChangeSBT": doNotChangeSBT})
-        if isPublic: payload["caseComment"].update({"isPublic": isPublic})
-
-        if newStatus: payload["additionalData"].update({"newStatus": newStatus})
-        if newInternalStatus: payload["additionalData"].update({"newInternalStatus": newInternalStatus})
-        if nno: payload["additionalData"].update({"needsNewOwner": nno})
+        if comment:
+            payload["caseComment"].update({"commentBody": comment})
+        if doNotChangeSBT:
+            payload["caseComment"].update({"doNotChangeSBT": doNotChangeSBT})
+        if isPublic:
+            payload["caseComment"].update({"isPublic": isPublic})
+        if newStatus:
+            payload["additionalData"].update({"newStatus": newStatus})
+        if newInternalStatus:
+            payload["additionalData"].update({"newInternalStatus": newInternalStatus})
+        if nno:
+            payload["additionalData"].update({"needsNewOwner": nno})
         # Both of these fields are for setting the Resolution status and a brief description of how it was resolved. To be used when setting the newStatus and newInternalStatus to "Closed"
-        if newResolution: payload["additionalData"].update({"newResolution": newResolution})
-        if newResolutionDescription: payload["additionalData"].update({"newResolutionDescription": newResolutionDescription})
-        return self.__put_api('cases/v2/comments',
-                payload=payload)
-
+        if newResolution:
+            payload["additionalData"].update({"newResolution": newResolution})
+        if newResolutionDescription:
+            payload["additionalData"].update(
+                {"newResolutionDescription": newResolutionDescription}
+            )
+        return self.__put_api("cases/v2/comments", payload=payload)
 
     def put_tag(self, case_number, tags=[]):
-        return self.__put_api('cases/{}/tags'.format(case_number),
-                payload={"tags":tags})
-
+        return self.__put_api(
+            "cases/{}/tags".format(case_number), payload={"tags": tags}
+        )
 
     def put_owner(self, case_number, user=""):
-        return self.__put_api("cases/{}/owner".format(case_number),
-                payload=user)
+        return self.__put_api("cases/{}/owner".format(case_number), payload=user)
 
+    @deprecation.deprecated(
+        deprecated_in="0.1",
+        removed_in="1.0",
+        details="Use the search_cases function instead",
+    )
+    def query_cases(
+        self,
+        status=[],
+        fields=[],
+        accounts=[],
+        cases=[],
+        sbrGroups=[],
+        needsNewOwner=None,
+        severity=[],
+        serviceLevel=[],
+        fts=None,
+        ownerSsousername=[],
+        tags=[],
+    ):
+        query_params = {}
 
-    def query_cases(self, status=[], fields=[], accounts=[], cases=[],
-           sbrGroups=[], needsNewOwner=None, severity=[], serviceLevel=[],
-           fts=None, ownerSsousername=[], tags=[]):
-       query_params = {}
+        if status:
+            query_params.update({"status": ", ".join(status)})
+        if fields:
+            query_params.update({"fields": ", ".join(fields)})
+        if accounts:
+            query_params.update({"accounts": ", ".join(accounts)})
+        if cases:
+            query_params.update({"case_number": ", ".join(cases)})
+        if sbrGroups:
+            query_params.update({"sbrGroups": ", ".join(sbrGroups)})
+        if needsNewOwner:
+            query_params.update({"needsNewOwner": needsNewOwner})
+        if severity:
+            query_params.update({"severity": ", ".join(severity)})
+        if serviceLevel:
+            query_params.update({"serviceLevel": ", ".join(serviceLevel)})
+        if fts:
+            query_params.update({"fts": fts})
+        if ownerSsousername:
+            query_params.update({"ownerSsousername": ", ".join(ownerSsousername)})
+        if tags:
+            query_params.update({"tags": ", ".join(tags)})
 
-       if status: query_params.update({'status': ", ".join(status)})
-       if fields: query_params.update({'fields': ", ".join(fields)})
-       if accounts: query_params.update({'accounts': ", ".join(accounts)})
-       if cases: query_params.update({'case_number': ", ".join(cases)})
-       if sbrGroups: query_params.update({'sbrGroups': ", ".join(sbrGroups)})
-       if needsNewOwner: query_params.update({'needsNewOwner': needsNewOwner})
-       if severity: query_params.update({'severity': ", ".join(severity)})
-       if serviceLevel:
-           query_params.update({'serviceLevel': ", ".join(serviceLevel)})
-       if fts: query_params.update({'fts': fts})
-       if ownerSsousername:
-           query_params.update({'ownerSsousername': ", ".join(ownerSsousername)})
-       if tags:
-           query_params.update({'tags': ", ".join(tags)})
+        return self.__get_api("cases/", parameters=query_params)
 
-       return self.__get_api('cases/', parameters=query_params)
-
-
-    def search_cases(self, fields=[], accounts=[], cases=[],
-        sbrGroups=[], ownerSsousername=[], tags=[], cluster_ids=[]):
+    def search_cases(
+        self,
+        fields=[],
+        accounts=[],
+        cases=[],
+        sbrGroups=[],
+        ownerSsousername=[],
+        tags=[],
+        cluster_ids=[],
+    ):
 
         query_params = {}
         ## Pulls back a lot if your not filtering! A field filter is recommended.
-        if fields: query_params.update({'fl': ",".join(fields)})
+        if fields:
+            query_params.update({"fl": ",".join(fields)})
 
         ## Mutually Exclusive Search!!!
         ## You can only search based on 1 paramiter! accounts, cases, etc.
 
         if accounts:
-            query_params.update({'q':
-                'case_accountNumber:({})'.format(' OR '.join(accounts))})
+            query_params.update(
+                {"q": "case_accountNumber:({})".format(" OR ".join(accounts))}
+            )
 
         if cases:
-            query_params.update({'q':
-                'case_number:({})'.format(' OR '.join(cases))})
+            query_params.update({"q": "case_number:({})".format(" OR ".join(cases))})
 
         if ownerSsousername:
-            query_params.update({'q':
-                'case_owner_sso_username:({})'.format(' OR '.join(
-                    ownerSsousername))})
+            query_params.update(
+                {
+                    "q": "case_owner_sso_username:({})".format(
+                        " OR ".join(ownerSsousername)
+                    )
+                }
+            )
 
         if sbrGroups:
-            query_params.update({'q': 
-                'case_sbr:({})'.format(' OR '.join(sbrGroups))})
+            query_params.update({"q": "case_sbr:({})".format(" OR ".join(sbrGroups))})
 
         if tags:
-            uery_params.update({'q':
-                'case_tags:({})'.format(' OR '.join(tags))})
+            query_params.update({"q": "case_tags:({})".format(" OR ".join(tags))})
 
         if cluster_ids:
-            query_params.update({'q':
-                'case_openshift_cluster_id:({})'.format(' OR '.join(
-                    cluster_ids))})
+            query_params.update(
+                {"q": "case_openshift_cluster_id:({})".format(" OR ".join(cluster_ids))}
+            )
 
-        return self.__get_api('search/cases/', parameters=query_params,
-                headers={'Content-Type': 'application/json'})
+        return self.__get_api(
+            "search/cases/",
+            parameters=query_params,
+            headers={"Content-Type": "application/json",},
+        )
