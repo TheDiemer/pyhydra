@@ -53,43 +53,40 @@ class hydra_api:
         # r = s.send(prepared)
 
         # NOTE: Comment this out; if you use the block above.
-<<<<<<< HEAD
-        r = requests.get(
-            "{}/{}".format(self.base_api_uri, endpoint),
-            params=parameters,
-            headers=headers,
-            auth=authentication,
-            verify=self.ca_certificate_path,
-        )
-        if r.status_code == 204:
-            return []
-        if r.status_code != 200:
-            raise Exception(
-                """looking up infomation from: {}\n
-                    Error Code: {}""".format(
-                    endpoint, r.status_code
-                )
-            )
-=======
         try:
-            r = requests.get("{}/{}".format(self.base_api_uri, endpoint),
-                    params=parameters, headers=headers, auth=authentication,
-                    verify=self.ca_certificate_path)
+            r = requests.get(
+                "{}/{}".format(self.base_api_uri, endpoint),
+                params=parameters,
+                headers=headers,
+                auth=authentication,
+                verify=self.ca_certificate_path,
+            )
             if r.status_code == 204:
                 return []
             if r.status_code != 200:
-                raise Exception('''looking up infomation from: {}\n
-                        Error Code: {}'''.format(endpoint, r.status_code))
+                raise Exception(
+                    """looking up infomation from: {}\n
+                        Error Code: {}""".format(
+                        endpoint, r.status_code
+                    )
+                )
             try:
                 return r.json()
             except:
                 response = []
-                raise Exception("""looking up information from: {}\n
-                    Error returning json""".format(endpoint))
+                raise Exception(
+                    """looking up information from: {}\n
+                    Error returning json""".format(
+                        endpoint
+                    )
+                )
         except Exception:
-            raise Exception("""looking up information from: {}\n
-                Error during request call""".format(endpoint))
->>>>>>> removing the finally return as it hid the exceptions which were intentional. Also figured out the syntax for adding Multiple queries (such as all cases from a specific SBR created during a specific date range
+            raise Exception(
+                """looking up information from: {}\n
+                Error during request call""".format(
+                    endpoint
+                )
+            )
 
         return r.json()
 
@@ -103,7 +100,13 @@ class hydra_api:
             json=payload,
             verify=self.ca_certificate_path,
         )
-        if r.status_code != 200:requests.packages.urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='access.redhat.com', port=443): Max retries exceeded with url: /hydra/rest/users/sso/rhn-support-jdeenada?fields=outOfOffice (Caused by NewConnectionError('<requests.packages.urllib3.connection.VerifiedHTTPSConnection object at 0x7f52e55901d0>: Failed to establish a new connection: [Errno -2] Name or service not known',))
+        if r.status_code != 200:
+            raise Exception(
+                """Putting information to '{}' failed.\n
+                    Error Code: {}""".format(
+                    endpoint, r.status_code
+                )
+            )
 
     def __post_api(self, endpoint, parameters=None, payload=None):
         authentication = (self.username, self.password)
@@ -488,28 +491,34 @@ class hydra_api:
 
         return self.__get_api("cases/", parameters=query_params)
 
-    def search_cases(self, **params):#fields=[], accounts=[], cases=[],
-        #sbrGroups=[], ownerSsousername=[], tags=[], cluster_ids=[]):
+    def search_cases(self, **params):
 
         query_params = {}
         # Looping back over the incoming kwargs
         for k, v in params.items():
             ## Fields add a much needed filter as the query will return a LOT of information without some!
             if k.lower() == "fl":
-                query_params.update({'fl': ",".join(v)})
+                query_params.update({"fl": ",".join(v)})
             # Everything else is a Query so it goes under q
             else:
                 # Modifying the way the value is handed to the dictionary if handed a list or not
                 if isinstance(v, list):
-                    if 'q' in query_params.keys():
-                        query_params.update({"fq": "{0}:({1})".format(k, " OR ".join(v))})
+                    if "q" in query_params.keys():
+                        query_params.update(
+                            {"fq": "{0}:({1})".format(k, " OR ".join(v))}
+                        )
                     else:
-                         query_params.update({"q": "{0}:({1})".format(k, " OR ".join(v))})
+                        query_params.update(
+                            {"q": "{0}:({1})".format(k, " OR ".join(v))}
+                        )
                 else:
                     if "q" in query_params.keys():
                         query_params.update({"fq": "{0}:{1}".format(k, v)})
                     else:
                         query_params.update({"q": "{0}:{1}".format(k, v)})
 
-        return self.__get_api('search/cases/', parameters=query_params,
-                headers={'Content-Type': 'application/json'})
+        return self.__get_api(
+            "search/cases/",
+            parameters=query_params,
+            headers={"Content-Type": "application/json"},
+        )
