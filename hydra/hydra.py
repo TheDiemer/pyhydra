@@ -491,7 +491,7 @@ class hydra_api:
 
         return self.__get_api("cases/", parameters=query_params)
 
-    def search_cases(self, **params):
+    def search_cases(self, **kwargs):
 
         query_params = {}
         # Looping back over the incoming kwargs
