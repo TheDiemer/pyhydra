@@ -73,7 +73,6 @@ class hydra_api:
             try:
                 return r.json()
             except:
-                response = []
                 raise Exception(
                     """looking up information from: {}\n
                     Error returning json""".format(
@@ -333,7 +332,7 @@ class hydra_api:
         ## The data returned from users is too much (filtered return)
         def get_case_user_details(associate):
             user = self.__get_api("users/{}".format(associate["OwnerId"]))
-            a_data.append(
+            data.append(
                 {
                     "role": associate["role"],
                     "name": user["fullName"],
@@ -495,7 +494,7 @@ class hydra_api:
 
         query_params = {}
         # Looping back over the incoming kwargs
-        for k, v in params.items():
+        for k, v in kwargs.items():
             ## Fields add a much needed filter as the query will return a LOT of information without some!
             if k.lower() == "fl":
                 query_params.update({"fl": ",".join(v)})
