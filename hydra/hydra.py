@@ -500,12 +500,12 @@ class hydra_api:
                 query_params.update({"fl": ",".join(v)})
             elif k.lower() == "start":
                 query_params.update({"start": v})
-                pass
             elif k.lower() == "rows":
                 query_params.update({"rows": v})
             else:
                 # Modifying the way the value is handed to the dictionary if handed a list or not
                 if isinstance(v, list):
+                    v = [f'"{x}"' for x in v]
                     if "q" in query_params.keys():
                         query_params.update(
                             {"fq": "{0}:({1})".format(k, " OR ".join(v))}
