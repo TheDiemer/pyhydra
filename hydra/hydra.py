@@ -506,19 +506,10 @@ class hydra_api:
                 # Modifying the way the value is handed to the dictionary if handed a list or not
                 if isinstance(v, list):
                     v = [f'"{x}"' for x in v]
-                    if "q" in query_params.keys():
-                        query_params.update(
-                            {"fq": "{0}:({1})".format(k, " OR ".join(v))}
-                        )
-                    else:
-                        query_params.update(
-                            {"q": "{0}:({1})".format(k, " OR ".join(v))}
-                        )
+                    query_params.update({"fq": "{0}:({1})".format(k, " OR ".join(v))})
                 else:
-                    if "q" in query_params.keys():
-                        query_params.update({"fq": "{0}:{1}".format(k, v)})
-                    else:
-                        query_params.update({"q": "{0}:{1}".format(k, v)})
+                    query_params.update({"fq": "{0}:{1}".format(k, v)})
+            query_params.update({"q": '"."'})
 
         return self.__get_api(
             "search/cases/",
