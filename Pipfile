@@ -8,6 +8,7 @@ requests = "*"
 setuptools = "*"
 wheel = "*"
 deprecation = "*"
+pipfile = "*"
 
 [dev-packages]
 
