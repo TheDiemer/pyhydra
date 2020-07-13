@@ -516,3 +516,32 @@ class hydra_api:
             parameters=query_params,
             headers={"Content-Type": "application/json"},
         )
+
+
+    def search_kcs(self, **kwargs):
+
+        query_params = {}
+        # Looping back over the incoming kwargs
+        for k, v in kwargs.items():
+            ## Fields add a much needed filter as the query will return a LOT of information without some!
+            if k.lower() == "fl":
+                query_params.update({"fl": ",".join(v)})
+            elif k.lower() == "start":
+                query_params.update({"start": v})
+            elif k.lower() == "rows":
+                query_params.update({"rows": v})
+            elif k.lower() == "q":
+                query_params.update({"q": v})
+            else:
+                # Modifying the way the value is handed to the dictionary if handed a list or not
+                if isinstance(v, list):
+                    v = [f'"{x}"' for x in v]
+                    query_params.update({"fq": "{0}:({1})".format(k, " OR ".join(v))})
+                else:
+                    query_params.update({"fq": "{0}:{1}".format(k, v)})
+
+        return self.__get_api(
+            "search/kcs/",
+            parameters=query_params,
+            headers={"Content-Type": "application/json"},
+        )
