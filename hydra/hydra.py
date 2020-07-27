@@ -531,6 +531,7 @@ class hydra_api:
     def search_cases(self, **kwargs):
 
         query_params = {}
+        fq_vals = []
         # Looping back over the incoming kwargs
         for k, v in kwargs.items():
             ## Fields add a much needed filter as the query will return a LOT of information without some!
@@ -544,10 +545,11 @@ class hydra_api:
                 # Modifying the way the value is handed to the dictionary if handed a list or not
                 if isinstance(v, list):
                     v = [f'"{x}"' for x in v]
-                    query_params.update({"fq": "{0}:({1})".format(k, " OR ".join(v))})
+                    fq_vals.append("{0}:({1})".format(k, " OR ".join(v)))
                 else:
-                    query_params.update({"fq": "{0}:{1}".format(k, v)})
-            query_params.update({"q": '*:*'})
+                    fq_vals.append("{0}:{1}".format(k, v))
+        query_params.update({"q": '*:*'})
+        query_params.update({"fq": fq_vals})
 
         return self.__get_api(
             "search/cases/",
@@ -559,6 +561,7 @@ class hydra_api:
     def search_kcs(self, **kwargs):
 
         query_params = {}
+        fq_vals = []
         # Looping back over the incoming kwargs
         for k, v in kwargs.items():
             ## Fields add a much needed filter as the query will return a LOT of information without some!
@@ -574,9 +577,10 @@ class hydra_api:
                 # Modifying the way the value is handed to the dictionary if handed a list or not
                 if isinstance(v, list):
                     v = [f'"{x}"' for x in v]
-                    query_params.update({"fq": "{0}:({1})".format(k, " OR ".join(v))})
+                    fq_vals.append("{0}:({1})".format(k, " OR ".join(v)))
                 else:
-                    query_params.update({"fq": "{0}:{1}".format(k, v)})
+                    fq_vals.append("{0}:{1}".format(k, v))
+        query_params.update({"fq": fq_vals})
 
         return self.__get_api(
             "search/kcs/",
