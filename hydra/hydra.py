@@ -1,7 +1,7 @@
 #!/bin/python
 
 import requests, warnings, functools, deprecation
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 class hydra_api:
@@ -23,6 +23,7 @@ class hydra_api:
         if ca_path == False:  # Used to Disable SSL warning (from each api call)
             requests.packages.urllib3.disable_warnings()
 
+        self.thread_pool = ThreadPoolExecutor(4)
         self.thread_pool = ThreadPoolExecutor(4)
 
     def __del__(self):
@@ -327,26 +328,29 @@ class hydra_api:
         return comment_data
 
     def get_case_associates(self, case_number):
-        data = []
 
-        ## The data returned from users is too much (filtered return)
+        # The data returned from users is too much (filtered return)
         def get_case_user_details(associate):
             user = self.__get_api("users/{}".format(associate["OwnerId"]))
-            data.append(
-                {
-                    "role": associate["role"],
-                    "name": user["fullName"],
-                    "title": user["fullTitle"],
-                    "irc_nick": user["ircNick"],
-                    "ooo": user["outOfOffice"],
-                    "phone": user["phone"],
-                    "email": user["email"],
-                    "region": user["superRegion"],
-                }
-            )
+            return {
+                "role": associate.get("role"),
+                "name": user.get("fullName"),
+                "title": user.get("fullTitle"),
+                "irc_nick": user.get("ircNick"),
+                "ooo": user.get("outOfOffice"),
+                "phone": user.get("phone"),
+                "email": user.get("email"),
+                "region": user.get("superRegion")
+            }
 
         associates = self.__get_api("cases/{}/associates".format(case_number))
-        self.thread_pool.map(get_case_user_details, associates, chunksize=1)
+
+        data = []
+        with ThreadPoolExecutor() as thread_executor:
+            futures = [thread_executor.submit(get_case_user_details, a) for a in associates]
+
+            for future in as_completed(futures):
+                data.append(future.result())
 
         return data
 
@@ -358,6 +362,40 @@ class hydra_api:
         return self.__get_api(
             "products/{}/versions".format("%20".join(product.split()))
         )
+
+    def get_case_history(self, case_number, parameters={}):
+        """Returns case history items.
+
+        Note that each history item will not have the same field names, because each conveys a different
+        history entry. For example, setting a new owner and closing a case are different events and will have
+        correspondingly different fields.
+
+        parameters may contain the following fields
+            - fields: Case history fields.
+            - limit: Max number of records to fetch.
+            - orderBy: Field to order results by.
+            - orderDirection: Defaults to ascending (asc), set to 'desc' for descending.
+            - offsetValue: Last value from a prior result set by which to offset the current query
+                            MUST SET orderBy TO A FIELD WITH UNIQUE VALUES TO GUARANTEE ALL RESULTS ARE RETURNED
+            - offsetType: Type of offsetValue parameter. Defaults to string, set to 'double' for double values,
+                            'int' for integer values, 'datetime' for dateTime values.
+        """
+        # Sanitize the input by only allowing valid field names and excluding fields where the value is None
+        valid_parameter_names = ['fields', 'limit', 'orderBy', 'orderDirection', 'offsetValue', 'offsetType']
+        params = {key: parameters[key] for key in valid_parameter_names if parameters.get(key, None)}
+        return self.__get_api(f'cases/{case_number}/history', parameters=params)
+
+    def get_case_remote_sessions(self, case_number, parameters={}):
+        """Returns case Bomgar remote sessions.
+
+        parameters may contain the following fields
+            - fields: The remote session fields to include in the output.
+            - limit: Max number of records to fetch.
+        """
+        # Sanitize the input by only allowing valid field names and excluding fields where the value is None
+        valid_parameter_names = ['fields', 'limit']
+        params = {key: parameters[key] for key in valid_parameter_names if parameters.get(key, None)}
+        return self.__get_api(f'cases/{case_number}/remotesessions', parameters=params)
 
     def create_case(
         self,
