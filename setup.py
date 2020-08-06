@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pyhydra",
-    version="0.1.0",
+    version="0.2.0",
     author="Eric Rich",
     author_email="erich@redhat.com",
     description="Python API for interacting with Hydra",
