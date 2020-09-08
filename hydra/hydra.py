@@ -243,10 +243,8 @@ class hydra_api:
 
     def get_case_jiras(self, case_number):
         ## The data returned from jiras is too much (filtered return)
-        return [
-            {"key": j["resourceKey"], "url": j["resourceURL"],}
-            for j in self.__get_api("cases/{}/jiras".format(case_number))
-        ]
+        return [{"key": j.get("resourceKey", ""), "url": j.get("resourceURL", "")}
+                    for j in self.__get_api("cases/{}/jiras".format(case_number))]
 
     def get_case_jira_count(self, case_number):
         return self.__get_api("cases/{}/count/jiras".format(case_number))
